@@ -1,7 +1,7 @@
 package bresenham
 
 // 2016-10-22, Stéphane Bunel
-//           * Do not use in production. Not tested.
+//           * Do not use in production. It's just an exercise
 
 import (
 	"image"
@@ -57,124 +57,194 @@ func Bresenham_3(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
 	}
 }
 
-// Integer float -> float * 2 * dx -> integer
+// Integer; remove comparison (cmp -> bit test); remove variables; float -> float * 2 * dx -> integer
 func Bresenham_4(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
 	dx, dy := x2-x1, 2*(y2-y1)
-	// e, e_max, e_sub := 2*0*dx, dx, 2*dx
-	e, e_max, e_sub := 0, dx, dx<<1
-	y := y1
+	e, slope := dx, 2*dx
+	for ; dx != 0; dx-- {
+		img.Set(x1, y1, col)
+		x1++
+		e -= dy
+		if e < 0 {
+			y1++
+			e += slope
+		}
+	}
+}
 
-	img.Set(x1, y1, col)
-	for x := x1 + 1; x <= x2; x++ {
-		img.Set(x, y, col)
-		e += dy // <= 2 * (dy/dx * dx)
-		if e > e_max {
-			y += 1
-			e -= e_sub
+// dx > dy; x1 < x2; y1 < y2
+func BresenhamDxXRYD(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
+	dx, dy := x2-x1, 2*(y2-y1)
+	e, slope := dx, 2*dx
+	for ; dx != 0; dx-- {
+		img.Set(x1, y1, col)
+		x1++
+		e -= dy
+		if e < 0 {
+			y1++
+			e += slope
+		}
+	}
+}
+
+// dy > dx; x1 < x2; y1 < y2
+func BresenhamDyXRYD(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
+	dx, dy := 2*(x2-x1), y2-y1
+	e, slope := dy, 2*dy
+	for ; dy != 0; dy-- {
+		img.Set(x1, y1, col)
+		y1++
+		e -= dx
+		if e < 0 {
+			x1++
+			e += slope
+		}
+	}
+}
+
+// dx > dy; x1 < x2; y1 > y2
+func BresenhamDxXRYU(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
+	dx, dy := x2-x1, 2*(y1-y2)
+	e, slope := dx, 2*dx
+	for ; dx != 0; dx-- {
+		img.Set(x1, y1, col)
+		x1++
+		e -= dy
+		if e < 0 {
+			y1--
+			e += slope
+		}
+	}
+}
+
+func BresenhamDyXRYU(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
+	dx, dy := 2*(x2-x1), y1-y2
+	e, slope := dy, 2*dy
+	for ; dy != 0; dy-- {
+		img.Set(x1, y1, col)
+		y1--
+		e -= dx
+		if e < 0 {
+			x1++
+			e += slope
 		}
 	}
 }
 
 // Generalized with integer
-func Bresenham(img *image.RGBA, p1, p2 image.Point, col color.Color) {
-	x1, y1, x2, y2 := p1.X, p1.Y, p2.X, p2.Y
+func Bresenham(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
+	var dx, dy, e, slope int
 
-	// Alway plot first point
-	img.Set(x1, y1, col)
-
-	// Line is a point ?
-	if x1 == x2 && y1 == y2 {
-		return
+	// Because drawing p1 -> p2 is equivalent to draw p2 -> p1,
+	// I sort points in x-axis order to handle only half of possible cases.
+	if x1 > x2 {
+		x1, y1, x2, y2 = x2, y2, x1, y1
 	}
 
-	// draw a vertical line ?
-	if x1 == x2 {
-		if y1 < y2 {
+	dx, dy = x2-x1, y2-y1
+	// Because point is x-axis ordered, dx cannot be negative
+	if dy < 0 {
+		dy = -dy
+	}
+
+	switch {
+
+	// Is line a point ?
+	case x1 == x2 && y1 == y2:
+		img.Set(x1, y1, col)
+
+	// Is line an horizontal ?
+	case y1 == y2:
+		for ; dx != 0; dx-- {
+			img.Set(x1, y1, col)
+			x1++
+		}
+		img.Set(x1, y1, col)
+
+	// Is line a vertical ?
+	case x1 == x2:
+		if y1 > y2 {
+			y1, y2 = y2, y1
+		}
+		for ; dy != 0; dy-- {
+			img.Set(x1, y1, col)
 			y1++
-			for y1 <= y2 {
+		}
+		img.Set(x1, y1, col)
+
+	// Is line a diagonal ?
+	case dx == dy:
+		if y1 < y2 {
+			for ; dx != 0; dx-- {
 				img.Set(x1, y1, col)
+				x1++
 				y1++
 			}
 		} else {
-			y2++
-			for y2 <= y1 {
-				img.Set(x1, y2, col)
-				y2++
-			}
-		}
-		return
-	}
-
-	// draw a horizontal line ?
-	if y1 == y2 {
-		if x1 < x2 {
-			x1++
-			for x1 <= x2 {
+			for ; dx != 0; dx-- {
 				img.Set(x1, y1, col)
 				x1++
+				y1--
+			}
+		}
+		img.Set(x1, y1, col)
+
+	// wider than high ?
+	case dx > dy:
+		if y1 < y2 {
+			// BresenhamDxXRYD(img, x1, y1, x2, y2, col)
+			dy, e, slope = 2*dy, dx, 2*dx
+			for ; dx != 0; dx-- {
+				img.Set(x1, y1, col)
+				x1++
+				e -= dy
+				if e < 0 {
+					y1++
+					e += slope
+				}
 			}
 		} else {
-			x2++
-			for x2 <= x1 {
-				img.Set(x2, y1, col)
-				x2++
+			// BresenhamDxXRYU(img, x1, y1, x2, y2, col)
+			dy, e, slope = 2*dy, dx, 2*dx
+			for ; dx != 0; dx-- {
+				img.Set(x1, y1, col)
+				x1++
+				e -= dy
+				if e < 0 {
+					y1--
+					e += slope
+				}
 			}
 		}
-		return
-	}
+		img.Set(x2, y2, col)
 
-	var dx, dy, xsign, ysign int
-
-	if x1 < x2 {
-		dx = x2 - x1
-		xsign = +1
-	} else {
-		dx = x1 - x2
-		xsign = -1
-	}
-
-	if y1 < y2 {
-		dy = y2 - y1
-		ysign = +1
-	} else {
-		dy = y1 - y2
-		ysign = -1
-	}
-
-	// a == 1 ?
-	if dx == dy {
-		for x1 != x2 {
-			x1 += xsign
-			y1 += ysign
-			img.Set(x1, y1, col)
-		}
-		return
-	}
-
-	// INFO: e, e_max, e_sub := 2*0*dx, dx, 2*dx
-
-	if dx > dy {
-		e, e_max, e_sub, y := 0, dx, dx<<1, y1
-		for x1 != x2 {
-			x1 += xsign
-			img.Set(x1, y, col)
-			e += dy << 1 // <= 2 * ( dy/dx * dx )
-			if e > e_max {
-				y += ysign
-				e -= e_sub
+	// higher than wide.
+	default:
+		if y1 < y2 {
+			// BresenhamDyXRYD(img, x1, y1, x2, y2, col)
+			dx, e, slope = 2*dx, dy, 2*dy
+			for ; dy != 0; dy-- {
+				img.Set(x1, y1, col)
+				y1++
+				e -= dx
+				if e < 0 {
+					x1++
+					e += slope
+				}
+			}
+		} else {
+			// BresenhamDyXRYU(img, x1, y1, x2, y2, col)
+			dx, e, slope = 2*dx, dy, 2*dy
+			for ; dy != 0; dy-- {
+				img.Set(x1, y1, col)
+				y1--
+				e -= dx
+				if e < 0 {
+					x1++
+					e += slope
+				}
 			}
 		}
-	} else {
-		e, e_max, e_sub, x := 0, dy, dy<<1, x1
-		for y1 != y2 {
-			y1 += ysign
-			img.Set(x, y1, col)
-			e += dx << 1 // <= 2 * ( dy/dx * dx )
-			if e > e_max {
-				x += xsign
-				e -= e_sub
-			}
-		}
+		img.Set(x2, y2, col)
 	}
-	img.Set(x2, y2, col)
 }

@@ -1,6 +1,8 @@
 package bresenham
 
 // 2016-10-22, Stéphane Bunel
+//           * go test
+//           * go test -bench=.
 
 import (
 	"image"
@@ -10,68 +12,208 @@ import (
 	"testing"
 )
 
-var imgRect = image.Rect(0, 0, 100, 100)
-var img = image.NewRGBA(imgRect)
-var p1 = image.Point{10, 10}
-var p2 = image.Point{25, 90}
-var p3 = image.Point{50, 50}
-var x1, x2, y1, y2 = 4, 7, 71, 35
+var colRED = color.RGBA{255, 0, 0, 255}
+var colGREEN = color.RGBA{0, 255, 0, 255}
+var colBLUE = color.RGBA{0, 0, 255, 255}
+var colWHITE = color.RGBA{255, 255, 255, 255}
 
-func drawCross(img *image.RGBA, p image.Point, col color.Color) {
-	x, y := p.X, p.Y
+func drawCross(img *image.RGBA, x, y int, col color.Color) {
 	for s := -3; s < 4; s++ {
 		img.Set(x+s, y, col)
 		img.Set(x, y+s, col)
 	}
 }
 
-func Test_Bresenham_1(t *testing.T) {
-	drawCross(img, image.Point{imgRect.Min.X, imgRect.Min.Y}, color.White)
-	drawCross(img, image.Point{imgRect.Max.X - 1, imgRect.Min.Y}, color.White)
-	drawCross(img, image.Point{imgRect.Max.X - 1, imgRect.Max.Y - 1}, color.White)
-	drawCross(img, image.Point{imgRect.Min.X, imgRect.Max.Y - 1}, color.White)
+func Test_BresenhamDxXRYD(t *testing.T) {
+	var imgRect = image.Rect(0, 0, 100, 100)
+	var img = image.NewRGBA(imgRect)
 
-	drawCross(img, p1, color.White)
-	drawCross(img, p2, color.White)
-	drawCross(img, p3, color.White)
+	drawCross(img, imgRect.Min.X, imgRect.Min.Y, colWHITE)
+	drawCross(img, imgRect.Max.X-1, imgRect.Min.Y, colWHITE)
+	drawCross(img, imgRect.Max.X-1, imgRect.Max.Y-1, colWHITE)
+	drawCross(img, imgRect.Min.X, imgRect.Max.Y-1, colWHITE)
 
-	Bresenham(img, p1, p2, color.RGBA{100, 100, 255, 255})
-	Bresenham(img, p2, p3, color.RGBA{100, 100, 255, 255})
-	Bresenham(img, p3, p1, color.RGBA{100, 100, 255, 255})
+	x1, y1 := 17, 11
+	drawCross(img, x1, y1, colRED)
+	x2, y2 := 71, 41
+	drawCross(img, x2, y2, colGREEN)
+
+	BresenhamDxXRYD(img, x1, y1, x2, y2, colBLUE)
 
 	// Save result
-	toimg, _ := os.Create("drawline.png")
+	filename := "bresenhamDxXRYD.png"
+	toimg, _ := os.Create(filename)
 	defer toimg.Close()
 	png.Encode(toimg, img)
-	t.Log("drawline.png saved.")
 }
 
-func Benchmark_Bresenham(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		Bresenham(img, p1, p2, color.RGBA{100, 255, 100, 255})
-	}
+func Test_BresenhamDyXRYD(t *testing.T) {
+	var imgRect = image.Rect(0, 0, 100, 100)
+	var img = image.NewRGBA(imgRect)
+
+	drawCross(img, imgRect.Min.X, imgRect.Min.Y, colWHITE)
+	drawCross(img, imgRect.Max.X-1, imgRect.Min.Y, colWHITE)
+	drawCross(img, imgRect.Max.X-1, imgRect.Max.Y-1, colWHITE)
+	drawCross(img, imgRect.Min.X, imgRect.Max.Y-1, colWHITE)
+
+	x1, y1 := 17, 11
+	drawCross(img, x1, y1, colRED)
+	x2, y2 := 47, 71
+	drawCross(img, x2, y2, colGREEN)
+
+	BresenhamDyXRYD(img, x1, y1, x2, y2, colBLUE)
+
+	// Save result
+	filename := "bresenhamDyXRYD.png"
+	toimg, _ := os.Create(filename)
+	defer toimg.Close()
+	png.Encode(toimg, img)
 }
+
+func Test_BresenhamDxXRYU(t *testing.T) {
+	var imgRect = image.Rect(0, 0, 100, 100)
+	var img = image.NewRGBA(imgRect)
+
+	drawCross(img, imgRect.Min.X, imgRect.Min.Y, colWHITE)
+	drawCross(img, imgRect.Max.X-1, imgRect.Min.Y, colWHITE)
+	drawCross(img, imgRect.Max.X-1, imgRect.Max.Y-1, colWHITE)
+	drawCross(img, imgRect.Min.X, imgRect.Max.Y-1, colWHITE)
+
+	x1, y1 := 11, 45
+	drawCross(img, x1, y1, colRED)
+
+	x2, y2 := 71, 7
+	drawCross(img, x2, y2, colGREEN)
+
+	BresenhamDxXRYU(img, x1, y1, x2, y2, colBLUE)
+
+	// Save result
+	filename := "bresenhamDxXRYU.png"
+	toimg, _ := os.Create(filename)
+	defer toimg.Close()
+	png.Encode(toimg, img)
+}
+
+func Test_BresenhamDyXRYU(t *testing.T) {
+	var imgRect = image.Rect(0, 0, 100, 100)
+	var img = image.NewRGBA(imgRect)
+
+	drawCross(img, imgRect.Min.X, imgRect.Min.Y, colWHITE)
+	drawCross(img, imgRect.Max.X-1, imgRect.Min.Y, colWHITE)
+	drawCross(img, imgRect.Max.X-1, imgRect.Max.Y-1, colWHITE)
+	drawCross(img, imgRect.Min.X, imgRect.Max.Y-1, colWHITE)
+
+	x1, y1 := 24, 71
+	drawCross(img, x1, y1, colRED)
+	x2, y2 := 47, 11
+	drawCross(img, x2, y2, colGREEN)
+
+	BresenhamDyXRYU(img, x1, y1, x2, y2, colBLUE)
+
+	// Save result
+	filename := "bresenhamDyXRYU.png"
+	toimg, _ := os.Create(filename)
+	defer toimg.Close()
+	png.Encode(toimg, img)
+}
+
+func Test_Bresenham(t *testing.T) {
+	var imgRect = image.Rect(0, 0, 100, 100)
+	var img = image.NewRGBA(imgRect)
+	var x1, y1, x2, y2 int
+
+	drawCross(img, imgRect.Min.X, imgRect.Min.Y, colWHITE)
+	drawCross(img, imgRect.Max.X-1, imgRect.Min.Y, colWHITE)
+	drawCross(img, imgRect.Max.X-1, imgRect.Max.Y-1, colWHITE)
+	drawCross(img, imgRect.Min.X, imgRect.Max.Y-1, colWHITE)
+
+	// H line
+	x1, y1, x2, y2 = 50, 20, 90, 20
+	drawCross(img, x1, y1, colRED)
+	drawCross(img, x2, y2, colGREEN)
+	Bresenham(img, x1, y1, x2, y2, colBLUE)
+
+	// V line
+	x1, y1, x2, y2 = 70, 10, 70, 40
+	drawCross(img, x1, y1, colRED)
+	drawCross(img, x2, y2, colGREEN)
+	Bresenham(img, x1, y1, x2, y2, colBLUE)
+
+	// m=1 line
+	x1, y1, x2, y2 = 60, 60, 90, 90
+	drawCross(img, x1, y1, colRED)
+	drawCross(img, x2, y2, colGREEN)
+	Bresenham(img, x1, y1, x2, y2, colBLUE)
+
+	// dxXLYD line
+	x1, y1, x2, y2 = 45, 10, 4, 20
+	drawCross(img, x1, y1, colRED)
+	drawCross(img, x2, y2, colGREEN)
+	Bresenham(img, x1, y1, x2, y2, colBLUE)
+
+	// dxXRYU line
+	x1, y1, x2, y2 = 10, 80, 60, 70
+	drawCross(img, x1, y1, colRED)
+	drawCross(img, x2, y2, colGREEN)
+	Bresenham(img, x1, y1, x2, y2, colBLUE)
+
+	// dyXRYD line
+	x1, y1, x2, y2 = 12, 10, 44, 90
+	drawCross(img, x1, y1, colRED)
+	drawCross(img, x2, y2, colGREEN)
+	Bresenham(img, x1, y1, x2, y2, colBLUE)
+
+	// dyXLYU line
+	x1, y1, x2, y2 = 30, 95, 8, 30
+	drawCross(img, x1, y1, colRED)
+	drawCross(img, x2, y2, colGREEN)
+	Bresenham(img, x1, y1, x2, y2, colBLUE)
+
+	// Save result
+	filename := "bresenhamALL.png"
+	toimg, _ := os.Create(filename)
+	defer toimg.Close()
+	png.Encode(toimg, img)
+}
+
+// ----- bench part -----
+
+var imgRect = image.Rect(0, 0, 100, 100)
+var img = image.NewRGBA(imgRect)
+var x1, y1, x2, y2 = 10, 10, 90, 25
 
 func Benchmark_Bresenham_1(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		Bresenham_1(img, x1, y1, x2, y2, color.RGBA{100, 255, 100, 255})
+		Bresenham_1(img, x1, y1, x2, y2, colWHITE)
 	}
 }
 
 func Benchmark_Bresenham_2(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		Bresenham_1(img, x1, y1, x2, y2, color.RGBA{100, 255, 100, 255})
+		Bresenham_2(img, x1, y1, x2, y2, colWHITE)
 	}
 }
 
 func Benchmark_Bresenham_3(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		Bresenham_1(img, x1, y1, x2, y2, color.RGBA{100, 255, 100, 255})
+		Bresenham_3(img, x1, y1, x2, y2, colWHITE)
 	}
 }
 
 func Benchmark_Bresenham_4(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		Bresenham_1(img, x1, y1, x2, y2, color.RGBA{100, 255, 100, 255})
+		Bresenham_4(img, x1, y1, x2, y2, colWHITE)
+	}
+}
+
+func Benchmark_BresenhamDxXRYD(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		BresenhamDxXRYD(img, x1, y1, x2, y2, colWHITE)
+	}
+}
+
+func Benchmark_Bresenham(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		Bresenham(img, x1, y1, x2, y2, colWHITE)
 	}
 }
