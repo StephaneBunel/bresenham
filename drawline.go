@@ -4,12 +4,12 @@ package bresenham
 //           * Do not use in production. It's just an exercise
 
 import (
-	"image"
 	"image/color"
+	"image/draw"
 )
 
 // Floating point
-func Bresenham_1(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
+func Bresenham_1(img draw.Image, x1, y1, x2, y2 int, col color.Color) {
 	dx, dy := x2-x1, y2-y1
 	a := float64(dy) / float64(dx)
 	b := int(float64(y1) - a*float64(x1))
@@ -22,7 +22,7 @@ func Bresenham_1(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
 }
 
 // Floating point with error accumulator
-func Bresenham_2(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
+func Bresenham_2(img draw.Image, x1, y1, x2, y2 int, col color.Color) {
 	dx, dy := x2-x1, y2-y1
 	a := float64(dy) / float64(dx)
 	e, e_max, e_sub := 0.0, 0.5, 1.0
@@ -40,7 +40,7 @@ func Bresenham_2(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
 }
 
 // Integer float -> float * dx -> integer
-func Bresenham_3(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
+func Bresenham_3(img draw.Image, x1, y1, x2, y2 int, col color.Color) {
 	dx, dy := x2-x1, y2-y1
 	// e, e_max, e_sub := 0*dx, dx/2, dx
 	e, e_max, e_sub := dx, dx>>1, dx
@@ -58,7 +58,7 @@ func Bresenham_3(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
 }
 
 // Integer; remove comparison (cmp -> bit test); remove variables; float -> float * 2 * dx -> integer
-func Bresenham_4(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
+func Bresenham_4(img draw.Image, x1, y1, x2, y2 int, col color.Color) {
 	dx, dy := x2-x1, 2*(y2-y1)
 	e, slope := dx, 2*dx
 	for ; dx != 0; dx-- {
@@ -73,7 +73,7 @@ func Bresenham_4(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
 }
 
 // dx > dy; x1 < x2; y1 < y2
-func BresenhamDxXRYD(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
+func BresenhamDxXRYD(img draw.Image, x1, y1, x2, y2 int, col color.Color) {
 	dx, dy := x2-x1, 2*(y2-y1)
 	e, slope := dx, 2*dx
 	for ; dx != 0; dx-- {
@@ -88,7 +88,7 @@ func BresenhamDxXRYD(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
 }
 
 // dy > dx; x1 < x2; y1 < y2
-func BresenhamDyXRYD(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
+func BresenhamDyXRYD(img draw.Image, x1, y1, x2, y2 int, col color.Color) {
 	dx, dy := 2*(x2-x1), y2-y1
 	e, slope := dy, 2*dy
 	for ; dy != 0; dy-- {
@@ -103,7 +103,7 @@ func BresenhamDyXRYD(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
 }
 
 // dx > dy; x1 < x2; y1 > y2
-func BresenhamDxXRYU(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
+func BresenhamDxXRYU(img draw.Image, x1, y1, x2, y2 int, col color.Color) {
 	dx, dy := x2-x1, 2*(y1-y2)
 	e, slope := dx, 2*dx
 	for ; dx != 0; dx-- {
@@ -117,7 +117,7 @@ func BresenhamDxXRYU(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
 	}
 }
 
-func BresenhamDyXRYU(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
+func BresenhamDyXRYU(img draw.Image, x1, y1, x2, y2 int, col color.Color) {
 	dx, dy := 2*(x2-x1), y1-y2
 	e, slope := dy, 2*dy
 	for ; dy != 0; dy-- {
@@ -132,7 +132,7 @@ func BresenhamDyXRYU(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
 }
 
 // Generalized with integer
-func Bresenham(img *image.RGBA, x1, y1, x2, y2 int, col color.Color) {
+func Bresenham(img draw.Image, x1, y1, x2, y2 int, col color.Color) {
 	var dx, dy, e, slope int
 
 	// Because drawing p1 -> p2 is equivalent to draw p2 -> p1,
