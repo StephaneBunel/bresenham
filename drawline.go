@@ -1,12 +1,18 @@
 package bresenham
 
 // 2016-10-22, Stéphane Bunel
-//           * Do not use in production. It's just an exercise
+//  * First implementation
+// 2021-11-27, Stéphane Bunel
+//  * Add Plotter interface
 
 import (
 	"image/color"
 	"image/draw"
 )
+
+type Plotter interface {
+	Set(x int, y int, c color.Color)
+}
 
 // Floating point
 func Bresenham_1(img draw.Image, x1, y1, x2, y2 int, col color.Color) {
@@ -132,7 +138,7 @@ func BresenhamDyXRYU(img draw.Image, x1, y1, x2, y2 int, col color.Color) {
 }
 
 // Generalized with integer
-func Bresenham(img draw.Image, x1, y1, x2, y2 int, col color.Color) {
+func Bresenham(p Plotter, x1, y1, x2, y2 int, col color.Color) {
 	var dx, dy, e, slope int
 
 	// Because drawing p1 -> p2 is equivalent to draw p2 -> p1,
@@ -151,15 +157,15 @@ func Bresenham(img draw.Image, x1, y1, x2, y2 int, col color.Color) {
 
 	// Is line a point ?
 	case x1 == x2 && y1 == y2:
-		img.Set(x1, y1, col)
+		p.Set(x1, y1, col)
 
 	// Is line an horizontal ?
 	case y1 == y2:
 		for ; dx != 0; dx-- {
-			img.Set(x1, y1, col)
+			p.Set(x1, y1, col)
 			x1++
 		}
-		img.Set(x1, y1, col)
+		p.Set(x1, y1, col)
 
 	// Is line a vertical ?
 	case x1 == x2:
@@ -167,27 +173,27 @@ func Bresenham(img draw.Image, x1, y1, x2, y2 int, col color.Color) {
 			y1, y2 = y2, y1
 		}
 		for ; dy != 0; dy-- {
-			img.Set(x1, y1, col)
+			p.Set(x1, y1, col)
 			y1++
 		}
-		img.Set(x1, y1, col)
+		p.Set(x1, y1, col)
 
 	// Is line a diagonal ?
 	case dx == dy:
 		if y1 < y2 {
 			for ; dx != 0; dx-- {
-				img.Set(x1, y1, col)
+				p.Set(x1, y1, col)
 				x1++
 				y1++
 			}
 		} else {
 			for ; dx != 0; dx-- {
-				img.Set(x1, y1, col)
+				p.Set(x1, y1, col)
 				x1++
 				y1--
 			}
 		}
-		img.Set(x1, y1, col)
+		p.Set(x1, y1, col)
 
 	// wider than high ?
 	case dx > dy:
@@ -195,7 +201,7 @@ func Bresenham(img draw.Image, x1, y1, x2, y2 int, col color.Color) {
 			// BresenhamDxXRYD(img, x1, y1, x2, y2, col)
 			dy, e, slope = 2*dy, dx, 2*dx
 			for ; dx != 0; dx-- {
-				img.Set(x1, y1, col)
+				p.Set(x1, y1, col)
 				x1++
 				e -= dy
 				if e < 0 {
@@ -207,7 +213,7 @@ func Bresenham(img draw.Image, x1, y1, x2, y2 int, col color.Color) {
 			// BresenhamDxXRYU(img, x1, y1, x2, y2, col)
 			dy, e, slope = 2*dy, dx, 2*dx
 			for ; dx != 0; dx-- {
-				img.Set(x1, y1, col)
+				p.Set(x1, y1, col)
 				x1++
 				e -= dy
 				if e < 0 {
@@ -216,7 +222,7 @@ func Bresenham(img draw.Image, x1, y1, x2, y2 int, col color.Color) {
 				}
 			}
 		}
-		img.Set(x2, y2, col)
+		p.Set(x2, y2, col)
 
 	// higher than wide.
 	default:
@@ -224,7 +230,7 @@ func Bresenham(img draw.Image, x1, y1, x2, y2 int, col color.Color) {
 			// BresenhamDyXRYD(img, x1, y1, x2, y2, col)
 			dx, e, slope = 2*dx, dy, 2*dy
 			for ; dy != 0; dy-- {
-				img.Set(x1, y1, col)
+				p.Set(x1, y1, col)
 				y1++
 				e -= dx
 				if e < 0 {
@@ -236,7 +242,7 @@ func Bresenham(img draw.Image, x1, y1, x2, y2 int, col color.Color) {
 			// BresenhamDyXRYU(img, x1, y1, x2, y2, col)
 			dx, e, slope = 2*dx, dy, 2*dy
 			for ; dy != 0; dy-- {
-				img.Set(x1, y1, col)
+				p.Set(x1, y1, col)
 				y1--
 				e -= dx
 				if e < 0 {
@@ -245,6 +251,10 @@ func Bresenham(img draw.Image, x1, y1, x2, y2 int, col color.Color) {
 				}
 			}
 		}
-		img.Set(x2, y2, col)
+		p.Set(x2, y2, col)
 	}
+}
+
+func DrawLine(p Plotter, x1, y1, x2, y2 int, col color.Color) {
+	Bresenham(p, x1, y1, x2, y2, col)
 }
